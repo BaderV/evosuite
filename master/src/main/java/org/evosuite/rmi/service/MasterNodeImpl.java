@@ -27,18 +27,17 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArraySet;
 
 import org.evosuite.ClientProcess;
 import org.evosuite.Properties;
 import org.evosuite.Properties.NoSuchParameterException;
 import org.evosuite.ga.Chromosome;
 import org.evosuite.result.TestGenerationResult;
+import org.evosuite.rmi.service.topology.AbstractTopology;
+import org.evosuite.rmi.service.topology.RingTopology;
 import org.evosuite.statistics.SearchStatistics;
 import org.evosuite.statistics.RuntimeVariable;
 import org.evosuite.utils.Listener;
-import org.evosuite.utils.LoggingUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,24 +48,12 @@ public class MasterNodeImpl implements MasterNodeRemote, MasterNodeLocal {
 	private static Logger logger = LoggerFactory.getLogger(MasterNodeImpl.class);
 
 	private final Registry registry;
-	private final Map<String, ClientNodeRemote> clients;
 
 	protected final Collection<Listener<ClientStateInformation>> listeners = Collections.synchronizedList(new ArrayList<Listener<ClientStateInformation>>());
 
-	/**
-	 * It is important to keep track of client states for debugging reasons. For
-	 * example, if client crash, could be useful to know in which state it was.
-	 * We cannot query the client directly in those cases, because it is
-	 * crashed... The "key" is the RMI identifier of the client
-	 */
-	private final Map<String, ClientState> clientStates;
-
-	private final Map<String, ClientStateInformation> clientStateInformation;
+	private final AbstractTopology topology = new RingTopology();
 
 	public MasterNodeImpl(Registry registry) {
-		clients = new ConcurrentHashMap<String, ClientNodeRemote>();
-		clientStates = new ConcurrentHashMap<String, ClientState>();
-		clientStateInformation = new ConcurrentHashMap<String, ClientStateInformation>();
 		this.registry = registry;
 	}
 
@@ -86,82 +73,45 @@ public class MasterNodeImpl implements MasterNodeRemote, MasterNodeLocal {
 			        + " tries to register to master", e);
 			return;
 		}
-		synchronized (clients) {
-			clients.put(clientRmiIdentifier, node);
-			clients.notifyAll();
-		}
+		this.topology.registerClientNode(clientRmiIdentifier, node);
 	}
 
 	@Override
 	public void evosuite_informChangeOfStateInClient(String clientRmiIdentifier,
 	        ClientState state, ClientStateInformation information) throws RemoteException {
-		clientStates.put(clientRmiIdentifier, state);
-		// To be on the safe side
-		information.setState(state);
-		clientStateInformation.put(clientRmiIdentifier, information);
+		this.topology.informChangeOfStateInClient(clientRmiIdentifier, state, information);
 		fireEvent(information);
 	}
 
 	@Override
 	public Collection<ClientState> getCurrentState() {
-		return clientStates.values();
+		return this.topology.getCurrentStates();
 	}
 
     @Override
     public ClientState getCurrentState(String clientId) {
-        return clientStates.get(clientId);
+        return this.topology.getCurrentState(clientId);
     }
 
     @Override
 	public Collection<ClientStateInformation> getCurrentStateInformation() {
-		return clientStateInformation.values();
+		return this.topology.getCurrentStateInformation();
 	}
 
 	@Override
 	public String getSummaryOfClientStatuses() {
-		if (clientStates.isEmpty()) {
-			return "No client has registered";
-		}
-		String summary = "";
-		for (String id : clientStates.keySet()) {
-			ClientState state = clientStates.get(id);
-			summary += id + ": " + state + "\n";
-		}
-		return summary;
+		return this.topology.getSummaryOfClientStatuses();
 	}
 
 	@Override
 	public Map<String, ClientNodeRemote> getClientsOnceAllConnected(long timeoutInMs)
 	        throws InterruptedException {
-
-		long start = System.currentTimeMillis();
-
-		int numberOfExpectedClients = Properties.NUM_PARALLEL_CLIENTS;
-
-		synchronized (clients) {
-			while (clients.size() != numberOfExpectedClients) {
-				long elapsed = System.currentTimeMillis() - start;
-				long timeRemained = timeoutInMs - elapsed;
-				if (timeRemained <= 0) {
-					return null;
-				}
-				clients.wait(timeRemained);
-			}
-			return Collections.unmodifiableMap(clients);
-		}
+		return this.topology.getClientsOnceAllConnected(timeoutInMs);
 	}
 
 	@Override
 	public void cancelAllClients() {
-		for (ClientNodeRemote client : clients.values()) {
-			try {
-				LoggingUtils.getEvoLogger().info("Trying to kill client " + client);
-				client.cancelCurrentSearch();
-			} catch (RemoteException e) {
-				logger.warn("Error while trying to cancel client: " + e);
-				e.printStackTrace();
-			}
-		}
+		this.topology.cancelAllClients();
 	}
 
 	@Override
@@ -197,24 +147,17 @@ public class MasterNodeImpl implements MasterNodeRemote, MasterNodeLocal {
     @Override
     public void evosuite_migrate(String clientRmiIdentifier, Set<? extends Chromosome> migrants)
             throws RemoteException {
-        //implements ring topology
-        int idSender = Integer.parseInt(clientRmiIdentifier.replaceAll("[^0-9]", ""));
-        int idNeighbour = (idSender + 1) % Properties.NUM_PARALLEL_CLIENTS;
-
-        while (!ClientState.SEARCH.equals(clientStates.get("ClientNode" + idNeighbour)) && idNeighbour != idSender) {
-            idNeighbour = (idNeighbour + 1) % Properties.NUM_PARALLEL_CLIENTS;
-        }
-
-        if (idNeighbour != idSender) {
-            ClientNodeRemote node = clients.get("ClientNode" + idNeighbour);
-            node.immigrate(migrants);
+        ClientNodeRemote receiver = this.topology.selectReceiver(clientRmiIdentifier);
+        if (receiver != null) {
+            receiver.immigrate(migrants);
         }
     }
 
     @Override
     public void evosuite_collectBestSolutions(String clientRmiIdentifier, Set<? extends Chromosome> solutions) {
         try {
-            ClientNodeRemote node = clients.get(ClientProcess.DEFAULT_CLIENT_NAME);
+            ClientNodeRemote node = this.topology.getClientNode(ClientProcess.DEFAULT_CLIENT_NAME);
+            assert node != null;
             node.collectBestSolutions(solutions);
         } catch (RemoteException e) {
             logger.error("Cannot send best solutions to client 0", e);
