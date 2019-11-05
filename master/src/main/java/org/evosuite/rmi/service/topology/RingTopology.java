@@ -19,6 +19,7 @@
  */
 package org.evosuite.rmi.service.topology;
 
+import org.evosuite.ClientProcess;
 import org.evosuite.Properties;
 import org.evosuite.rmi.service.ClientNodeRemote;
 import org.evosuite.rmi.service.ClientState;
@@ -33,13 +34,13 @@ public class RingTopology extends AbstractTopology {
     int idSender = Integer.parseInt(senderIdentifier.replaceAll("[^0-9]", ""));
     int idNeighbour = (idSender + 1) % Properties.NUM_PARALLEL_CLIENTS;
 
-    while (!ClientState.SEARCH.equals(clientStates.get("ClientNode" + idNeighbour))
+    while (!ClientState.SEARCH.equals(clientStates.get(ClientProcess.CLIENT_PREFIX + idNeighbour))
         && idNeighbour != idSender) {
       idNeighbour = (idNeighbour + 1) % Properties.NUM_PARALLEL_CLIENTS;
     }
 
     if (idNeighbour != idSender) {
-      ClientNodeRemote node = clients.get("ClientNode" + idNeighbour);
+      ClientNodeRemote node = clients.get(ClientProcess.CLIENT_PREFIX + idNeighbour);
       return node;
     }
 
