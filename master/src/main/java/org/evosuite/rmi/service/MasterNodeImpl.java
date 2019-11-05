@@ -171,7 +171,7 @@ public class MasterNodeImpl implements MasterNodeRemote, MasterNodeLocal {
             assert node != null;
             node.collectBestSolutions(solutions);
         } catch (RemoteException e) {
-            logger.error("Cannot send best solutions to client 0", e);
+            logger.error(clientRmiIdentifier + " cannot send best solutions to " + ClientProcess.DEFAULT_CLIENT_NAME, e);
         }
     }
 
