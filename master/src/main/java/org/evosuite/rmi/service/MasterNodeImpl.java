@@ -34,6 +34,7 @@ import org.evosuite.Properties.NoSuchParameterException;
 import org.evosuite.ga.Chromosome;
 import org.evosuite.result.TestGenerationResult;
 import org.evosuite.rmi.service.topology.AbstractTopology;
+import org.evosuite.rmi.service.topology.RandomTopology;
 import org.evosuite.rmi.service.topology.RingTopology;
 import org.evosuite.statistics.SearchStatistics;
 import org.evosuite.statistics.RuntimeVariable;
@@ -51,10 +52,20 @@ public class MasterNodeImpl implements MasterNodeRemote, MasterNodeLocal {
 
 	protected final Collection<Listener<ClientStateInformation>> listeners = Collections.synchronizedList(new ArrayList<Listener<ClientStateInformation>>());
 
-	private final AbstractTopology topology = new RingTopology();
+	private final AbstractTopology topology;
 
 	public MasterNodeImpl(Registry registry) {
 		this.registry = registry;
+
+		switch (Properties.CLIENTS_TOPOLOGY) {
+		  case RANDOM:
+		    this.topology = new RandomTopology();
+		    break;
+		  case RING:
+		  default:
+		    this.topology = new RingTopology();
+		    break;
+		}
 	}
 
 	@Override

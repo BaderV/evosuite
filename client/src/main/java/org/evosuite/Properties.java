@@ -299,6 +299,14 @@ public class Properties {
 	@Parameter(key = "num_parallel_clients", group = "Test Creation", description = "Number of EvoSuite clients to run in parallel")
 	public static int NUM_PARALLEL_CLIENTS = 1;
 
+	@Parameter(key = "clients_topology", group = "Test Creation", description = "Topology of EvoSuite clients")
+	public static ClientTopology CLIENTS_TOPOLOGY = ClientTopology.RING;
+
+	public enum ClientTopology {
+	    RANDOM,
+	    RING
+	}
+
 	@Parameter(key = "migrants_iteration_frequency", group = "Test Creation", description = "Determines amount of iterations between sending migrants to other client (-1 to disable any iterations between clients)")
 	public static int MIGRANTS_ITERATION_FREQUENCY = 2;
 
