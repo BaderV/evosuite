@@ -26,7 +26,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
@@ -35,8 +34,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
-
-import org.apache.commons.collections.list.SynchronizedList;
 
 import org.evosuite.*;
 import org.evosuite.Properties;
@@ -64,6 +61,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class ClientNodeImpl implements ClientNodeLocal, ClientNodeRemote {
+
+	private static final long serialVersionUID = 5426338086249634947L;
 
 	private static Logger logger = LoggerFactory.getLogger(ClientNodeImpl.class);
 
