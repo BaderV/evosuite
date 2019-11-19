@@ -304,7 +304,8 @@ public class Properties {
 
 	public enum ClientTopology {
 	    RANDOM,
-	    RING
+	    RING,
+	    HYPERCUBE
 	}
 
 	@Parameter(key = "migrants_iteration_frequency", group = "Test Creation", description = "Determines amount of iterations between sending migrants to other client (-1 to disable any iterations between clients)")

@@ -34,6 +34,7 @@ import org.evosuite.Properties.NoSuchParameterException;
 import org.evosuite.ga.Chromosome;
 import org.evosuite.result.TestGenerationResult;
 import org.evosuite.rmi.service.topology.AbstractTopology;
+import org.evosuite.rmi.service.topology.HypercubeTopology;
 import org.evosuite.rmi.service.topology.RandomTopology;
 import org.evosuite.rmi.service.topology.RingTopology;
 import org.evosuite.statistics.SearchStatistics;
@@ -60,6 +61,9 @@ public class MasterNodeImpl implements MasterNodeRemote, MasterNodeLocal {
 		switch (Properties.CLIENTS_TOPOLOGY) {
 		  case RANDOM:
 		    this.topology = new RandomTopology();
+		    break;
+		  case HYPERCUBE:
+		    this.topology = new HypercubeTopology();
 		    break;
 		  case RING:
 		  default:
