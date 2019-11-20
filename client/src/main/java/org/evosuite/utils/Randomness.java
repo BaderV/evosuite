@@ -20,6 +20,7 @@
 package org.evosuite.utils;
 
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -300,6 +301,17 @@ public class Randomness implements Serializable {
 	 */
 	public static void shuffle(List<?> list) {
 		Collections.shuffle(list, random);
+	}
+
+	/**
+	 * <p>
+	 * shuffle
+	 * </p>
+	 * @param <T> a T object.
+	 * @param elements a T object.
+	 */
+	public static <T> void shuffle(T... elements) {
+		Collections.shuffle(Arrays.asList(elements), random);
 	}
 
 	/**

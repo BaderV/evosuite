@@ -23,6 +23,7 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.evosuite.*;
 import org.evosuite.Properties;
 import org.evosuite.Properties.Strategy;
@@ -37,8 +38,10 @@ import org.evosuite.rmi.service.ClientNodeRemote;
 import org.evosuite.runtime.util.JarPathing;
 import org.evosuite.runtime.util.JavaExecCmdUtil;
 import org.evosuite.statistics.SearchStatistics;
+import org.evosuite.utils.ArrayUtil;
 import org.evosuite.utils.ExternalProcessGroupHandler;
 import org.evosuite.utils.LoggingUtils;
+import org.evosuite.utils.Randomness;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -306,8 +309,17 @@ public class TestGeneration {
 		cmdLine.add("-XX:MaxJavaStackTraceDepth=1000000");
 		cmdLine.add("-XX:+StartAttachListener");
 
+		Properties.Criterion[] criterion = Properties.CRITERION;
+
 		for (String arg : args) {
-			if (!arg.startsWith("-DCP=")) {
+			if (arg.startsWith("-Dcriterion=")) {
+				// Convert criterion string into Java objects
+				String[] cs = arg.replaceFirst("-Dcriterion=", "").split(":");
+				criterion = new Properties.Criterion[cs.length];
+				for (int i = 0; i < cs.length; i++) {
+					criterion[i] = Properties.Criterion.valueOf(cs[i]);
+				}
+			} else if (!arg.startsWith("-DCP=")) {
 				cmdLine.add(arg);
 			}
 		}
@@ -385,8 +397,35 @@ public class TestGeneration {
 		Properties.TARGET_CLASS = target;
 		Properties.PROCESS_COMMUNICATION_PORT = port;
 
+		// Split criterion by number of clients, i.e., Properties.NUM_PARALLEL_CLIENTS, if the property
+		// that controls that behavior is enabled, otherwise all clients get the same set of criteria
+		Properties.Criterion[][] criterionPerClient = new Properties.Criterion[Properties.NUM_PARALLEL_CLIENTS][];
+		if (Properties.NUM_PARALLEL_CLIENTS > 1 && Properties.DIFFERENT_FITNESS_FUNCTIONS_PER_CLIENT) {
+			// Shuffle criterion, either the default or the ones passed by argument, i.e., -Dcriterion=...
+			Randomness.shuffle(criterion);
+
+			// Split criterion by number of clients, i.e., Properties.NUM_PARALLEL_CLIENTS
+			assert criterion.length >= Properties.NUM_PARALLEL_CLIENTS;
+			Object[][] objs = ArrayUtil.splitArray(criterion, Properties.NUM_PARALLEL_CLIENTS);
+			// FIXME I wish I could use something like
+			// criterionPerClient = (Properties.Criterion[][]) ArrayUtil.splitArray(criterion, numCriteriaPerClient);
+			// instead of the following loop, but it throws a cast exception
+			for (int i = 0; i < objs.length; i++) {
+				criterionPerClient[i] = new Properties.Criterion[objs[i].length];
+				for (int j = 0; j < objs[i].length; j++) {
+					criterionPerClient[i][j] = (Properties.Criterion) objs[i][j];
+				}
+			}
+		} else {
+			// Avoid wasting CPU cycles if all clients get the same set of fitness functions
+			Arrays.fill(criterionPerClient, criterion);
+		}
+
         for (int i = 0; i < Properties.NUM_PARALLEL_CLIENTS; i++) {
             List<String> cmdLineClone = new ArrayList<>(cmdLine);
+
+            // Set criterion argument
+            cmdLineClone.add("-Dcriterion=" + StringUtils.join(criterionPerClient[i], ":"));
 
             if (i == 0 && Properties.DEBUG) {
                 // enabling debugging mode to for Client-0 e.g. connect the eclipse remote debugger to the given port
