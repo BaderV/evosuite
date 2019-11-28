@@ -168,13 +168,6 @@ public class MSecurityManager extends SecurityManager {
 	 */
 	private volatile Thread privilegedThreadToIgnore;
 
-	/**
-	 * Name of all the methods in the MasterNodeRemote interface.
-	 * This is used to allow RMI communications even on non-privileged threads,
-	 * but only if coming from EvoSuite (and not from SUT)
-	 */
-	private static Set<String> masterNodeRemoteMethodNames;
-
     private static boolean runningClientOnThread = false;
 
 	/**
@@ -199,21 +192,6 @@ public class MSecurityManager extends SecurityManager {
 
 		filesToDelete = new CopyOnWriteArraySet<>();
 	}
-
-    /**
-     * We need to use reflection to avoid the runtime module to have a dependency
-     * on MasterNodeRemote
-     *
-     * @param remoteNode
-     */
-    public static void setupMasterNodeRemoteHandling(Class<?> remoteNode) {
-        Method[] methods = remoteNode.getMethods();
-        Set<String> names = new HashSet<>();
-        for(Method m : methods) {
-            names.add(m.getName());
-        }
-        masterNodeRemoteMethodNames = Collections.unmodifiableSet(names);
-    }
 
 	public Set<Thread> getPrivilegedThreads() {
 		Set<Thread> set = new LinkedHashSet<>();
@@ -733,22 +711,6 @@ public class MSecurityManager extends SecurityManager {
 		}
 
 		if(!foundRMI) {
-			//found no reference to RMI
-			return false;
-		}
-
-		boolean foundMasterNode = false;
-
-		traceLoop: for(StackTraceElement element : Thread.currentThread().getStackTrace()) {
-			for(String masterNodeMethod : masterNodeRemoteMethodNames) {
-				if(element.toString().contains(masterNodeMethod)) {
-					foundMasterNode = true;
-					break traceLoop;
-				}
-			}
-		}
-
-		if(!foundMasterNode) {
 			//found no reference to RMI
 			return false;
 		}
