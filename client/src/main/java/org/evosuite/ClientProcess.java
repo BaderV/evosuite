@@ -248,4 +248,8 @@ public class ClientProcess {
 			}
 		}
 	}
+
+	public static void setIdentifier(final String id) {
+	  identifier = id;
+	}
 }

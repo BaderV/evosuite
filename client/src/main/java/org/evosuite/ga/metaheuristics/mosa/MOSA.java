@@ -153,13 +153,7 @@ public class MOSA<T extends Chromosome> extends AbstractMOSA<T> {
 		this.currentIteration++;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public void generateSolution() {
-		logger.info("executing generateSolution function");
-
+	protected void preGenerationProcedure() {
 		// keep track of covered goals
 		this.fitnessFunctions.forEach(this::addUncoveredGoal);
 
@@ -173,6 +167,16 @@ public class MOSA<T extends Chromosome> extends AbstractMOSA<T> {
 		for (int i = 0; i < this.rankingFunction.getNumberOfSubfronts(); i++) {
 			this.distance.fastEpsilonDominanceAssignment(this.rankingFunction.getSubfront(i), this.getUncoveredGoals());
 		}
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public void generateSolution() {
+		logger.info("executing generateSolution function");
+
+		this.preGenerationProcedure();
 
 		Listener<Set<? extends Chromosome>> listener = null;
 		if (Properties.NUM_PARALLEL_CLIENTS > 1) {

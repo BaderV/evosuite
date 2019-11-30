@@ -299,6 +299,9 @@ public class Properties {
 	@Parameter(key = "num_parallel_clients", group = "Test Creation", description = "Number of EvoSuite clients to run in parallel")
 	public static int NUM_PARALLEL_CLIENTS = 1;
 
+	@Parameter(key = "num_sequential_clients", group = "Test Creation", description = "Number of EvoSuite clients to run in sequence")
+	public static int NUM_SEQUENTIAL_CLIENTS = 1;
+
 	@Parameter(key = "different_fitness_functions_per_client", group = "Test Creation", description = "Use a set of different fitness functions per client")
 	public static boolean DIFFERENT_FITNESS_FUNCTIONS_PER_CLIENT = false;
 
@@ -327,7 +330,7 @@ public class Properties {
 		// mu-lambda
 		ONE_PLUS_LAMBDA_LAMBDA_GA, ONE_PLUS_ONE_EA, MU_PLUS_LAMBDA_EA, MU_LAMBDA_EA,
 		// many-objective algorithms
-		MOSA, LIPS, MIO,
+		MOSA, METAMOSA, LIPS, MIO,
 		// multiple-objective optimisation algorithms
 		NSGAII, SPEA2
 	}

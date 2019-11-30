@@ -38,7 +38,6 @@ import org.evosuite.testsuite.TestSuiteChromosome;
 import org.evosuite.utils.ArrayUtil;
 import org.evosuite.utils.LoggingUtils;
 import org.evosuite.utils.Randomness;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -50,8 +49,9 @@ import java.util.List;
  */
 public class MOSuiteStrategy extends TestGenerationStrategy {
 
-	@Override	
-	public TestSuiteChromosome generateTests() {
+	private final List<TestFitnessFunction> fitnessFunctions = new ArrayList<TestFitnessFunction>();
+
+	public GeneticAlgorithm<TestSuiteChromosome> setUpAlgorithm() {
 		// Currently only LIPS uses its own Archive
 		if (Properties.ALGORITHM == Properties.Algorithm.LIPS) {
 			Properties.TEST_ARCHIVE = false;
@@ -70,11 +70,8 @@ public class MOSuiteStrategy extends TestGenerationStrategy {
 		if(Properties.SERIALIZE_GA || Properties.CLIENT_ON_THREAD)
 			TestGenerationResultBuilder.getInstance().setGeneticAlgorithm(algorithm);
 
-		long startTime = System.currentTimeMillis() / 1000;
-
 		// What's the search target
 		List<TestFitnessFactory<? extends TestFitnessFunction>> goalFactories = getFitnessFactories();
-		List<TestFitnessFunction> fitnessFunctions = new ArrayList<TestFitnessFunction>();
         for (TestFitnessFactory<? extends TestFitnessFunction> goalFactory : goalFactories) {
             fitnessFunctions.addAll(goalFactory.getCoverageGoals());
         }
@@ -94,6 +91,17 @@ public class MOSuiteStrategy extends TestGenerationStrategy {
 //		if (Properties.SHOW_PROGRESS && !logger.isInfoEnabled())
 //			ga.addListener(progressMonitor); // FIXME progressMonitor may cause
 
+		algorithm.resetStoppingConditions();
+
+		return algorithm;
+	}
+
+	@Override
+	public TestSuiteChromosome generateTests() {
+		long startTime = System.currentTimeMillis() / 1000;
+
+		GeneticAlgorithm<TestSuiteChromosome> algorithm = this.setUpAlgorithm();
+
 		if (ArrayUtil.contains(Properties.CRITERION, Criterion.DEFUSE) || 
 				ArrayUtil.contains(Properties.CRITERION, Criterion.ALLDEFS) || 
 				ArrayUtil.contains(Properties.CRITERION, Criterion.STATEMENT) || 
@@ -102,8 +110,6 @@ public class MOSuiteStrategy extends TestGenerationStrategy {
 				ArrayUtil.contains(Properties.CRITERION, Criterion.AMBIGUITY))
 			ExecutionTracer.enableTraceCalls();
 
-		algorithm.resetStoppingConditions();
-		
 		TestSuiteChromosome testSuite = null;
 
 		if (!(Properties.STOP_ZERO && fitnessFunctions.isEmpty()) || ArrayUtil.contains(Properties.CRITERION, Criterion.EXCEPTION)) {

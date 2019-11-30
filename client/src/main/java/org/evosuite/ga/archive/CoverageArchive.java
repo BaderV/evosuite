@@ -57,9 +57,6 @@ public class CoverageArchive<F extends TestFitnessFunction, T extends TestChromo
    */
   private final Set<F> uncovered = new LinkedHashSet<F>();
 
-  public static final CoverageArchive<TestFitnessFunction, TestChromosome> instance =
-      new CoverageArchive<TestFitnessFunction, TestChromosome>();
-
   /**
    * {@inheritDoc}
    */

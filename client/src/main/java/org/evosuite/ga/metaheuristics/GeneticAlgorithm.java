@@ -948,6 +948,10 @@ public abstract class GeneticAlgorithm<T extends Chromosome> implements SearchAl
 		return population;
 	}
 
+	public void addToPopulation(List<T> solutions) {
+	  this.population.addAll(solutions);
+	}
+
 	/**
 	 * Determine if the next generation has reached its size limit
 	 * 

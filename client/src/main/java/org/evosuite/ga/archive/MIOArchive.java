@@ -58,9 +58,6 @@ public class MIOArchive<F extends TestFitnessFunction, T extends TestChromosome>
    **/
   protected final Map<F, Population> archive = new LinkedHashMap<F, Population>();
 
-  public static final MIOArchive<TestFitnessFunction, TestChromosome> instance =
-      new MIOArchive<TestFitnessFunction, TestChromosome>();
-
   /**
    * {@inheritDoc}
    */

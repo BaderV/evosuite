@@ -26,6 +26,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import org.evosuite.ClientProcess;
 import org.evosuite.Properties;
 import org.evosuite.ga.Chromosome;
 import org.evosuite.ga.SecondaryObjective;
@@ -540,12 +541,25 @@ public abstract class Archive<F extends TestFitnessFunction, T extends TestChrom
    * @return
    */
   public static final Archive<TestFitnessFunction, TestChromosome> getArchiveInstance() {
+    Archive<TestFitnessFunction, TestChromosome> archive = archives.get(ClientProcess.getIdentifier());
+    if (archive != null) {
+      return archive;
+    }
+
     switch (Properties.ARCHIVE_TYPE) {
       case COVERAGE:
       default:
-        return CoverageArchive.instance;
+        archive = new CoverageArchive<TestFitnessFunction, TestChromosome>();
+        break;
       case MIO:
-        return MIOArchive.instance;
+        archive = new MIOArchive<TestFitnessFunction, TestChromosome>();
+        break;
     }
+
+    archives.put(ClientProcess.getIdentifier(), archive);
+    return archive;
   }
+
+  private static Map<String, Archive<TestFitnessFunction, TestChromosome>> archives = new
+      LinkedHashMap<String, Archive<TestFitnessFunction, TestChromosome>>();
 }
