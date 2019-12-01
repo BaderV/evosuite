@@ -309,6 +309,7 @@ public class Properties {
 	public static ClientTopology CLIENTS_TOPOLOGY = ClientTopology.RING;
 
 	public enum ClientTopology {
+	    NONE,
 	    RANDOM,
 	    RING,
 	    HYPERCUBE

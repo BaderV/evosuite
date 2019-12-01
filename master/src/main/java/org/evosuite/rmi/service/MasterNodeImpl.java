@@ -35,6 +35,7 @@ import org.evosuite.ga.Chromosome;
 import org.evosuite.result.TestGenerationResult;
 import org.evosuite.rmi.service.topology.AbstractTopology;
 import org.evosuite.rmi.service.topology.HypercubeTopology;
+import org.evosuite.rmi.service.topology.NoTopology;
 import org.evosuite.rmi.service.topology.RandomTopology;
 import org.evosuite.rmi.service.topology.RingTopology;
 import org.evosuite.statistics.SearchStatistics;
@@ -53,7 +54,7 @@ public class MasterNodeImpl implements MasterNodeRemote, MasterNodeLocal {
 
 	protected final Collection<Listener<ClientStateInformation>> listeners = Collections.synchronizedList(new ArrayList<Listener<ClientStateInformation>>());
 
-	private AbstractTopology topology;
+	private AbstractTopology topology = new NoTopology();
 
 	public MasterNodeImpl(Registry registry) {
 		this.registry = registry;
@@ -67,9 +68,10 @@ public class MasterNodeImpl implements MasterNodeRemote, MasterNodeLocal {
 			    this.topology = new HypercubeTopology();
 			    break;
 			  case RING:
-			  default:
 			    this.topology = new RingTopology();
 			    break;
+			  default:
+			    throw new RuntimeException("Unknown topology");
 			}
 		}
 	}
