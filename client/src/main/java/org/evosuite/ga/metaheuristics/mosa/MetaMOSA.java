@@ -164,6 +164,10 @@ public class MetaMOSA<T extends Chromosome> extends AbstractMOSA<T> {
 
     // sub-MOSA to evolve
     MOSA mosa = this.mosas[this.current_mosa_index];
+    if (mosa.getPopulation().isEmpty() || mosa.getFitnessFunctions().isEmpty()) {
+      // nothing to optimize
+      return;
+    }
 
     // Evolve sub-MOSA
     mosa.evolve();

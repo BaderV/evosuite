@@ -177,6 +177,11 @@ public class MOSA<T extends Chromosome> extends AbstractMOSA<T> {
 		logger.info("executing generateSolution function");
 
 		this.preGenerationProcedure();
+		if (this.population.isEmpty() || this.fitnessFunctions.isEmpty()) {
+			// nothing to optimize
+			this.notifySearchFinished();
+			return;
+		}
 
 		Listener<Set<? extends Chromosome>> listener = null;
 		if (Properties.NUM_PARALLEL_CLIENTS > 1) {
