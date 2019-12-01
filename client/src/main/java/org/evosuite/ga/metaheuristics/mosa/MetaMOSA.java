@@ -107,9 +107,19 @@ public class MetaMOSA<T extends Chromosome> extends AbstractMOSA<T> {
       Object[][] objs =
           ArrayUtil.splitArray(this.criterionBackup, Properties.NUM_SEQUENTIAL_CLIENTS);
       for (int k = 0; k < objs.length; k++) {
-        this.criterionPerClient[k] = new Properties.Criterion[objs[k].length];
-        for (int z = 0; z < objs[k].length; z++) {
-          this.criterionPerClient[k][z] = (Properties.Criterion) objs[k][z];
+        if (objs[k].length == 1 && objs[k][0] == Properties.Criterion.EXCEPTION) {
+          // EXCEPTION itself is not able to guide the search through the search space,
+          // in here we add BRANCH to the list of fitness function to optimize as a helper
+          // fitness function
+          this.criterionPerClient[k] = new Properties.Criterion[] {
+              Properties.Criterion.BRANCH,
+              Properties.Criterion.EXCEPTION
+          };
+        } else {
+          this.criterionPerClient[k] = new Properties.Criterion[objs[k].length];
+          for (int z = 0; z < objs[k].length; z++) {
+            this.criterionPerClient[k][z] = (Properties.Criterion) objs[k][z];
+          }
         }
       }
     } else {

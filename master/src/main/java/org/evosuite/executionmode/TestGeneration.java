@@ -425,7 +425,14 @@ public class TestGeneration {
             List<String> cmdLineClone = new ArrayList<>(cmdLine);
 
             // Set criterion argument
-            cmdLineClone.add("-Dcriterion=" + StringUtils.join(criterionPerClient[i], ":"));
+            String criterionStr = StringUtils.join(criterionPerClient[i], ":");
+            if (criterionStr.equals(Properties.Criterion.EXCEPTION.name())) {
+              // EXCEPTION itself is not able to guide the search through the search space,
+              // in here we add BRANCH to the list of fitness function to optimize as a helper
+              // fitness function
+              criterionStr = Properties.Criterion.BRANCH.name() + ":" + Properties.Criterion.EXCEPTION.name();
+            }
+            cmdLineClone.add("-Dcriterion=" + criterionStr);
 
             if (i == 0 && Properties.DEBUG) {
                 // enabling debugging mode to for Client-0 e.g. connect the eclipse remote debugger to the given port
