@@ -53,22 +53,24 @@ public class MasterNodeImpl implements MasterNodeRemote, MasterNodeLocal {
 
 	protected final Collection<Listener<ClientStateInformation>> listeners = Collections.synchronizedList(new ArrayList<Listener<ClientStateInformation>>());
 
-	private final AbstractTopology topology;
+	private AbstractTopology topology;
 
 	public MasterNodeImpl(Registry registry) {
 		this.registry = registry;
 
-		switch (Properties.CLIENTS_TOPOLOGY) {
-		  case RANDOM:
-		    this.topology = new RandomTopology();
-		    break;
-		  case HYPERCUBE:
-		    this.topology = new HypercubeTopology();
-		    break;
-		  case RING:
-		  default:
-		    this.topology = new RingTopology();
-		    break;
+		if (Properties.NUM_PARALLEL_CLIENTS > 1) {
+			switch (Properties.CLIENTS_TOPOLOGY) {
+			  case RANDOM:
+			    this.topology = new RandomTopology();
+			    break;
+			  case HYPERCUBE:
+			    this.topology = new HypercubeTopology();
+			    break;
+			  case RING:
+			  default:
+			    this.topology = new RingTopology();
+			    break;
+			}
 		}
 	}
 
