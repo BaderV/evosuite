@@ -142,7 +142,9 @@ public class MetaMOSA<T extends Chromosome> extends AbstractMOSA<T> {
       MOSA<TestSuiteChromosome> mosa =
           (MOSA<TestSuiteChromosome>) testGenerationStrategy.setUpAlgorithm();
       // Run pre-procedure for each sub-MOSA
-      mosa.preGenerationProcedure();
+      if (!mosa.getFitnessFunctions().isEmpty()) {
+        mosa.preGenerationProcedure();
+      }
 
       // Register this new sub-MOSA
       this.topology.registerClient(this.getSubMOSAid(i), mosa);
@@ -165,7 +167,7 @@ public class MetaMOSA<T extends Chromosome> extends AbstractMOSA<T> {
     // sub-MOSA to evolve
     MOSA mosa = this.mosas[this.current_mosa_index];
     if (mosa.getPopulation().isEmpty() || mosa.getFitnessFunctions().isEmpty()) {
-      // nothing to optimize
+      // no individual to optimize and no fitness function to optimize for
       return;
     }
 

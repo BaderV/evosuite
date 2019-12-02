@@ -176,9 +176,16 @@ public class MOSA<T extends Chromosome> extends AbstractMOSA<T> {
 	public void generateSolution() {
 		logger.info("executing generateSolution function");
 
+		if (this.fitnessFunctions.isEmpty()) {
+			// no fitness to optimize for
+			this.notifySearchFinished();
+			return;
+		}
+
 		this.preGenerationProcedure();
-		if (this.population.isEmpty() || this.fitnessFunctions.isEmpty()) {
-			// nothing to optimize
+
+		if (this.population.isEmpty()) {
+			// no individual to optimize
 			this.notifySearchFinished();
 			return;
 		}
