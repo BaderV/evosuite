@@ -404,13 +404,17 @@ public class TestGeneration {
 			// Shuffle criterion, either the default or the ones passed by argument, i.e., -Dcriterion=...
 			Randomness.shuffle(criterion);
 
+			// Client-0 must optimize all fitness functions defined in Properties.CRITERION, otherwise
+			// coverage analysis might throw some exceptions
+			criterionPerClient[0] = Properties.CRITERION;
+
 			// Split criterion by number of clients, i.e., Properties.NUM_PARALLEL_CLIENTS
 			assert criterion.length >= Properties.NUM_PARALLEL_CLIENTS;
 			Object[][] objs = ArrayUtil.splitArray(criterion, Properties.NUM_PARALLEL_CLIENTS);
 			// FIXME I wish I could use something like
 			// criterionPerClient = (Properties.Criterion[][]) ArrayUtil.splitArray(criterion, numCriteriaPerClient);
 			// instead of the following loop, but it throws a cast exception
-			for (int i = 0; i < objs.length; i++) {
+			for (int i = 1; i < objs.length; i++) {
 				criterionPerClient[i] = new Properties.Criterion[objs[i].length];
 				for (int j = 0; j < objs[i].length; j++) {
 					criterionPerClient[i][j] = (Properties.Criterion) objs[i][j];
